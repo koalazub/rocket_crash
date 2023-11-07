@@ -7,7 +7,7 @@
       templ.url = "github:a-h/templ";
    };
 
-  outputs = inputs@{ self, nixpkgs, ... }:
+  outputs = { self, nixpkgs, ... }:
     let
 
       # to work with older version of flakes
@@ -24,8 +24,6 @@
 
       # Nixpkgs instantiated for supported system types.
       nixpkgsFor = forAllSystems (system: import nixpkgs { inherit system; });
-
-      templ = system: inputs.templ.${system}.templ;
 
     in
     {
@@ -74,6 +72,7 @@
             hurl
             turso-cli
             vscode-langservers-extracted
+            sqld
             ];
           };
         });
