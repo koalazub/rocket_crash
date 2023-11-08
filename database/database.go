@@ -39,7 +39,7 @@ func initConnection() *sql.DB {
 }
 
 func initTable(db *sql.DB) error {
-	_, err := db.Exec("create table if not exists rockets(id INT, name varchar(255),  crashed int, death_coord_x real, death_coord_y real)")
+	_, err := db.Exec("create table if not exists rockets(id INT, name varchar(255),  crashed int, death_coord_x real, death_coord_y real, rocket_type varchar(255))")
 	if err != nil {
 		slog.Error("Error creating table. Verify that the query is correct")
 		return err
