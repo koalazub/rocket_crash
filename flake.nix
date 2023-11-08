@@ -1,5 +1,5 @@
 {
-  description = "A simple Go package";
+  description = "flake build for rpc, go project and frontend";
 
   # Nixpkgs / NixOS version to use.
   inputs = { 
@@ -73,6 +73,7 @@
             turso-cli
             vscode-langservers-extracted
             sqld
+            capnproto
             ];
           };
         });
