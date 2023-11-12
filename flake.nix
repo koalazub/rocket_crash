@@ -53,6 +53,7 @@
             preConfigure = ''
               export XDG_CACHE_HOME=$TMPDIR/.cache
               export GOPATH=$XDG_CACHE_HOME/go
+              export CAPNP_GO_STD="${capnpc-go}/std" # export the binary for the cli
             '';
 
             configureFlags = [
