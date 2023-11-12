@@ -1,21 +1,14 @@
 {
-  description = "flake build for rpc, go project and frontend";
+  description = "overengineered rocket crash";
 
   # Nixpkgs / NixOS version to use.
-  inputs = { 
-      nixpkgs.url = "nixpkgs/nixpkgs-unstable"; 
-      templ.url = "github:a-h/templ";
-   };
+  inputs = {
+    nixpkgs.url = "nixpkgs/nixpkgs-unstable";
+    templ.url = "github:a-h/templ";
+  };
 
-  outputs = { self, nixpkgs, ... }:
+  outputs = { self, nixpkgs, templ, ... }:
     let
-
-      # to work with older version of flakes
-      lastModifiedDate = self.lastModifiedDate or self.lastModified or "19700101";
-
-      # Generate a user-friendly version number.
-      version = builtins.substring 0 8 lastModifiedDate;
-
       # System types to support.
       supportedSystems = [ "x86_64-linux" "x86_64-darwin" "aarch64-linux" "aarch64-darwin" ];
 
@@ -24,63 +17,60 @@
 
       # Nixpkgs instantiated for supported system types.
       nixpkgsFor = forAllSystems (system: import nixpkgs { inherit system; });
-
     in
     {
-
       # Provide some binary packages for selected system types.
       packages = forAllSystems (system:
         let
           pkgs = nixpkgsFor.${system};
-        in
-        {
-          staging = pkgs.buildGoModule {
-            pname = "rocket_crash";
-            inherit version;
-            # In 'nix develop', we don't need a copy of the source tree
-            # in the Nix store.
-            src = ./.;
-
-            # This hash locks the dependencies of this package. It is
-            # necessary because of how Go requires network access to resolve
-            # VCS.  See https://www.tweag.io/blog/2021-03-04-gomod2nix/ for
-            # details. Normally one can build with a fake sha256 and rely on native Go
-            # mechanisms to tell you what the hash should be or determine what
-            # it should be "out-of-band" with other tooling (eg. gomod2nix).
-            # To begin with it is recommended to set this, but one must
-            # remeber to bump this hash when your dependencies change.
-            #vendorSha256 = pkgs.lib.fakeSha256;
-
-            vendorSha256 = "sha256-pQpattmS9VmO3ZIQUFn66az8GSmB4IvYhTTCFn6SUmo=";
+          go-capnp = pkgs.fetchFromGitHub {
+            name = "go-capnp";
+            owner = "capnproto";
+            repo = "go-capnp";
+            rev = "main";
+            hash = "sha256-P6YP5b5Bz5/rS1ulkt1tSr3mhLyxxwgCin4WRFErPGM=";
           };
-        });
-      
-      # Add dependencies that are only needed for development
-      devShells = forAllSystems (system:
-        let 
-          pkgs = nixpkgsFor.${system};
-        in
+          templPkg = templ;
+        in rec
         {
-          default = pkgs.mkShell {
-            buildInputs = with pkgs; [ 
-            go_1_21
-            gopls 
-            gotools 
-            go-tools 
-            marksman
-            air
-            hurl
-            turso-cli
-            vscode-langservers-extracted
-            sqld
-            capnproto
+          capnpc-go = pkgs.buildGoModule {
+            name = "capnpc-go";
+            pname = "capnpc-go";
+            src = go-capnp;
+            sourceRoot = "go-capnp";
+            vendorSha256 = "sha256-DRNbv+jhIHzoBItuiQykrp/pD/46uysFbazLJ59qbqY=";
+            buildPhase = ''
+              go install ./capnpc-go
+            '';
+          };
+          staging = pkgs.stdenv.mkDerivation {
+            pname = "rocket_crash";
+            version = builtins.substring 0 8 (self.lastModifiedDate or "19700101");
+            srcs = [ go-capnp ]; # This should be a path to the source or a derivation
+
+            # sourceRoot should be a string pointing to the directory to use as the root for the build.
+            sourceRoot = "src"; 
+
+            preConfigure = ''
+              export XDG_CACHE_HOME=$TMPDIR/.cache
+              export GOPATH=$XDG_CACHE_HOME/go
+            '';
+
+            configureFlags = [
+              "--with-go-capnp=../go-capnp" # This flag should be appropriate for your build
+            ];
+
+            nativeBuildInputs = with pkgs; [
+              capnproto
+              capnpc-go # This should be a derivation, not a flag or a string.
+              go
+              gopls
+              # ... other inputs
+              templPkg # Make sure 'templ' is a derivation too.
             ];
           };
         });
 
-      # The default package for 'nix build'. This makes sense if the
-      # flake provides only one package or there is a clear "main"
-      # package.
-      defaultPackage = forAllSystems (system: self.packages.${system}.go-hello);
+      defaultPackage = forAllSystems (system: self.packages.${system}.staging);
     };
 }
