@@ -30,7 +30,6 @@
             rev = "main";
             hash = "sha256-P6YP5b5Bz5/rS1ulkt1tSr3mhLyxxwgCin4WRFErPGM=";
           };
-          templPkg = templ;
         in rec
         {
           capnpc-go = pkgs.buildGoModule {
@@ -65,8 +64,7 @@
               capnpc-go # This should be a derivation, not a flag or a string.
               go
               gopls
-              # ... other inputs
-              templPkg # Make sure 'templ' is a derivation too.
+              templ.packages.${system}.templ
             ];
           };
         });
