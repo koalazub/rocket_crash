@@ -49,7 +49,7 @@ func initTable(db *sql.DB) error {
 }
 
 func loadEnv() {
-	if err := godotenv.Load(".env"); err != nil {
+	if err := godotenv.Load("../.env"); err != nil {
 		{
 			slog.Error("Error loading db vars. Are they present? ", err)
 			return
@@ -61,6 +61,5 @@ func loadEnv() {
 	if tursoAuth == "" || tursoUrl == "" {
 		slog.Error("couldn't load env variables. Are they there?")
 		return
-	}
-
+	} 
 }
