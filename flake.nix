@@ -1,7 +1,6 @@
 {
-  description = "bump rockets, make boom";
+  description = "bump rockets, make whoosh";
 
-  # Nixpkgs / NixOS version to use.
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
     templ.url = "github:a-h/templ";
@@ -9,17 +8,13 @@
 
   outputs = { self, nixpkgs, templ, ... }:
     let
-      # System types to support.
       supportedSystems = [ "x86_64-linux" "x86_64-darwin" "aarch64-linux" "aarch64-darwin" ];
 
-      # Helper function to generate an attrset '{ x86_64-linux = f "x86_64-linux"; ... }'.
       forAllSystems = nixpkgs.lib.genAttrs supportedSystems;
 
-      # Nixpkgs instantiated for supported system types.
       nixpkgsFor = forAllSystems (system: import nixpkgs { inherit system; });
     in
     {
-      # Provide some binary packages for selected system types.
       packages = forAllSystems (system:
         let
           pkgs = nixpkgsFor.${system};
@@ -29,12 +24,6 @@
             repo = "go-capnp";
             rev = "main";
             hash = "sha256-P6YP5b5Bz5/rS1ulkt1tSr3mhLyxxwgCin4WRFErPGM=";
-          };
-          rocket_crash-src = pkgs.fetchFromGitHub {
-            name = "rocket_crash";
-            owner = "koalazu";
-            repo = "rocket-crash";
-            rev = "main";
           };
         in rec
         {
@@ -53,7 +42,6 @@
             pname = "rocket_crash";
             version = builtins.substring 0 8 (self.lastModifiedDate or "19700101");
             srcs = [
-              rocket_crash-src
               go-capnp
             ];
 
@@ -63,6 +51,11 @@
             preConfigure = ''
               export XDG_CACHE_HOME=$TMPDIR/.cache
               export GOPATH=$XDG_CACHE_HOME/go
+            '';
+            shellHook = ''
+              echo "called shellhook for dev"
+              export CAPNPC_GO_STD="${capnpc-go}"
+              echo "${capnpc-go}"
             '';
             configureFlags = [
               "--with-go-capnp=../go-capnp"
