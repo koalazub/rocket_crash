@@ -1,9 +1,9 @@
 {
-  description = "overengineered rocket crash";
+  description = "bump rockets, make boom";
 
   # Nixpkgs / NixOS version to use.
   inputs = {
-    nixpkgs.url = "nixpkgs/nixpkgs-unstable";
+    nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
     templ.url = "github:a-h/templ";
   };
 
@@ -30,6 +30,12 @@
             rev = "main";
             hash = "sha256-P6YP5b5Bz5/rS1ulkt1tSr3mhLyxxwgCin4WRFErPGM=";
           };
+          rocket_crash-src = pkgs.fetchFromGitHub {
+            name = "rocket_crash";
+            owner = "koalazu";
+            repo = "rocket-crash";
+            rev = "main";
+          };
         in rec
         {
           capnpc-go = pkgs.buildGoModule {
@@ -42,34 +48,36 @@
               go install ./capnpc-go
             '';
           };
-          staging = pkgs.stdenv.mkDerivation {
+          rocket_crash = pkgs.stdenv.mkDerivation {
+            name = "rocket_crash";
             pname = "rocket_crash";
             version = builtins.substring 0 8 (self.lastModifiedDate or "19700101");
-            srcs = [ go-capnp ]; # This should be a path to the source or a derivation
+            srcs = [
+              rocket_crash-src
+              go-capnp
+            ];
 
-            # sourceRoot should be a string pointing to the directory to use as the root for the build.
-            sourceRoot = "src"; 
+            GOMAXPROCS = "1";
 
+            sourceRoot = "rocket_crash-src/";
             preConfigure = ''
               export XDG_CACHE_HOME=$TMPDIR/.cache
               export GOPATH=$XDG_CACHE_HOME/go
-              export CAPNP_GO_STD="${capnpc-go}/std" # export the binary for the cli
             '';
-
             configureFlags = [
-              "--with-go-capnp=../go-capnp" # This flag should be appropriate for your build
+              "--with-go-capnp=../go-capnp"
             ];
 
             nativeBuildInputs = with pkgs; [
-              capnproto
-              capnpc-go # This should be a derivation, not a flag or a string.
               go
-              gopls
+              gotools
+              capnproto
+              capnpc-go
               templ.packages.${system}.templ
             ];
           };
         });
 
-      defaultPackage = forAllSystems (system: self.packages.${system}.staging);
+      defaultPackage = forAllSystems (system: self.packages.${system}.rocket_crash);
     };
 }
