@@ -36,11 +36,14 @@ func loadEnv() {
 }
 
 func InitServer() {
-	udpConn := UDPServer()
+	udpConn, err := UDPServer()
+	if err != nil {
+		slog.Error("Couldn't intiialise UDP server", err)
+	}
 	InitialiseQuicTransport(udpConn)
 }
 
-func UDPServer() *net.UDPConn {
+func UDPServer() (*net.UDPConn, error) {
 	udpConn, err := net.ListenUDP("udp4", &net.UDPAddr{Port: port})
 	if err != nil {
 		slog.Error("couldn't make the UDP connection at port:", err)
@@ -49,17 +52,17 @@ func UDPServer() *net.UDPConn {
 	size := 1024 * 2048 // this is in bytes
 	if err = udpConn.SetReadBuffer(size); err != nil {
 		slog.Error("couldn't allocate the correct size for read buffer  ")
-		return nil
+		return nil, err
 	}
 	if err = udpConn.SetWriteBuffer(size); err != nil {
 		slog.Error("couldn't allocate the correct size for read buffer  ")
-		return nil
+		return nil, err
 	}
 
-	return udpConn
+	return udpConn, nil
 }
 
-func InitialiseQuicTransport(udpConn *net.UDPConn) *quic.Listener {
+func InitialiseQuicTransport(udpConn *net.UDPConn) (*quic.Listener, error) {
 
 	tr := quic.Transport{
 		Conn: udpConn,
@@ -68,10 +71,10 @@ func InitialiseQuicTransport(udpConn *net.UDPConn) *quic.Listener {
 	ln, err := tr.Listen(&tls.Config{}, &quic.Config{})
 	if err != nil {
 		slog.Error("Unable to listen, check tls and quic configurations", err)
-		return nil
+		return nil, err
 	}
 
 	slog.Info("UDP Listener active on:", "", ln.Addr())
 
-	return ln
+	return ln, nil
 }
