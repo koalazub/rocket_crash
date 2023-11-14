@@ -64,6 +64,7 @@
             nativeBuildInputs = with pkgs; [
               go
               gotools
+              gopls
               capnproto
               capnpc-go
               templ.packages.${system}.templ

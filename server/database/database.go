@@ -61,5 +61,5 @@ func loadEnv() {
 	if tursoAuth == "" || tursoUrl == "" {
 		slog.Error("couldn't load env variables. Are they there?")
 		return
-	} 
+	}
 }

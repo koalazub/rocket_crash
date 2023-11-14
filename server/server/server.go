@@ -36,14 +36,24 @@ func loadEnv() {
 }
 
 func InitServer() {
-	udpConn := QuicUDP()
+	udpConn := UDPServer()
 	InitialiseQuicTransport(udpConn)
 }
 
-func QuicUDP() *net.UDPConn {
+func UDPServer() *net.UDPConn {
 	udpConn, err := net.ListenUDP("udp4", &net.UDPAddr{Port: port})
 	if err != nil {
 		slog.Error("couldn't make the UDP connection at port:", err)
+	}
+
+	size := 1024 * 2048 // this is in bytes
+	if err = udpConn.SetReadBuffer(size); err != nil {
+		slog.Error("couldn't allocate the correct size for read buffer  ")
+		return nil
+	}
+	if err = udpConn.SetWriteBuffer(size); err != nil {
+		slog.Error("couldn't allocate the correct size for read buffer  ")
+		return nil
 	}
 
 	return udpConn
