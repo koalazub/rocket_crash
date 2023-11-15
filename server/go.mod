@@ -5,6 +5,7 @@ go 1.21
 toolchain go1.21.3
 
 require (
+	capnproto.org/go/capnp/v3 v3.0.0-alpha-29
 	github.com/joho/godotenv v1.5.1
 	github.com/quic-go/quic-go v0.40.0
 )
@@ -18,8 +19,10 @@ require (
 	golang.org/x/crypto v0.4.0 // indirect
 	golang.org/x/mod v0.11.0 // indirect
 	golang.org/x/net v0.10.0 // indirect
+	golang.org/x/sync v0.3.0 // indirect
 	golang.org/x/sys v0.8.0 // indirect
 	golang.org/x/tools v0.9.1 // indirect
+	zenhack.net/go/util v0.0.0-20230414204917-531d38494cf5 // indirect
 )
 
 require (
@@ -27,6 +30,6 @@ require (
 	github.com/klauspost/compress v1.15.15 // indirect
 	github.com/libsql/libsql-client-go v0.0.0-20231026052543-fce76c0f39a7
 	github.com/libsql/sqlite-antlr4-parser v0.0.0-20230802215326-5cb5bb604475 // indirect
-	golang.org/x/exp v0.0.0-20221205204356-47842c84f3db // indirect
+	golang.org/x/exp v0.0.0-20230321023759-10a507213a29 // indirect
 	nhooyr.io/websocket v1.8.7 // indirect
 )

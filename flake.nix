@@ -48,14 +48,9 @@
             GOMAXPROCS = "1";
 
             sourceRoot = "rocket_crash-src/";
-            preConfigure = ''
-              export XDG_CACHE_HOME=$TMPDIR/.cache
-              export GOPATH=$XDG_CACHE_HOME/go
-            '';
             shellHook = ''
-              echo "called shellhook for dev"
-              export CAPNPC_GO_STD="${capnpc-go}"
-              echo "${capnpc-go}"
+              echo "Entered devshell"
+              export CAPNPC_GO_STD="${capnpc-go.src}/std" 
             '';
             configureFlags = [
               "--with-go-capnp=../go-capnp"
