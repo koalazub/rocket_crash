@@ -1,7 +1,9 @@
 package server
 
 import (
+	"context"
 	"crypto/tls"
+	"fmt"
 	"log/slog"
 	"net"
 	"os"
@@ -9,6 +11,8 @@ import (
 
 	"github.com/joho/godotenv"
 	"github.com/quic-go/quic-go"
+	"github.com/quic-go/quic-go/logging"
+	"github.com/quic-go/quic-go/qlog"
 )
 
 func init() {
@@ -68,7 +72,20 @@ func InitialiseQuicTransport(udpConn *net.UDPConn) (*quic.Listener, error) {
 		Conn: udpConn,
 	}
 
-	ln, err := tr.Listen(&tls.Config{}, &quic.Config{})
+	ln, err := tr.Listen(&tls.Config{}, &quic.Config{
+		Tracer: func(ctx context.Context, p logging.Perspective, ci quic.ConnectionID) *logging.ConnectionTracer {
+			role := "server"
+			if p == logging.PerspectiveClient {
+				role = "client"
+			}
+			filename := fmt.Sprintf("./log_%x_%s.qlog", ci, role)
+			f, err := os.Create(filename)
+			if err != nil {
+				slog.Error("Error creating qlog file", filename, err)
+			}
+			return qlog.NewConnectionTracer(f, p, ci)
+		},
+	})
 	if err != nil {
 		slog.Error("Unable to listen, check tls and quic configurations", err)
 		return nil, err
