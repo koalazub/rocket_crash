@@ -1,18 +1,14 @@
 package server
 
 import (
-	"context"
-	"crypto/tls"
 	"fmt"
 	"log/slog"
-	"net"
+	"net/http"
 	"os"
 	"strconv"
 
 	"github.com/joho/godotenv"
-	"github.com/quic-go/quic-go"
-	"github.com/quic-go/quic-go/logging"
-	"github.com/quic-go/quic-go/qlog"
+	"github.com/quic-go/quic-go/http3"
 )
 
 func init() {
@@ -40,58 +36,28 @@ func loadEnv() {
 }
 
 func InitServer() {
-	udpConn, err := UDPServer()
+	fAddr := addr + ":" + string(port)
+	crt := "certfile.cert"
+	key := "keyfile.key"
+	slog.Info("Now listening on:", fAddr)
+	err := http3.ListenAndServeQUIC(fAddr, crt, key, setupHandler())
 	if err != nil {
-		slog.Error("Couldn't intiialise UDP server", err)
+		slog.Error("Couldn't create QUIC server. Check that the address, cert, key and handlers are good: ", err)
 	}
-	InitialiseQuicTransport(udpConn)
+
 }
 
-func UDPServer() (*net.UDPConn, error) {
-	udpConn, err := net.ListenUDP("udp4", &net.UDPAddr{Port: port})
-	if err != nil {
-		slog.Error("couldn't make the UDP connection at port:", err)
-	}
+func setupHandler() http.Handler {
+	mux := http.NewServeMux()
+	mux.HandleFunc("/", handleHome)
+	mux.HandleFunc("/rocket", handleRocket)
 
-	size := 1024 * 2048 // this is in bytes
-	if err = udpConn.SetReadBuffer(size); err != nil {
-		slog.Error("couldn't allocate the correct size for read buffer  ")
-		return nil, err
-	}
-	if err = udpConn.SetWriteBuffer(size); err != nil {
-		slog.Error("couldn't allocate the correct size for read buffer  ")
-		return nil, err
-	}
-
-	return udpConn, nil
+	return mux
 }
 
-func InitialiseQuicTransport(udpConn *net.UDPConn) (*quic.Listener, error) {
-
-	tr := quic.Transport{
-		Conn: udpConn,
-	}
-
-	ln, err := tr.Listen(&tls.Config{}, &quic.Config{
-		Tracer: func(ctx context.Context, p logging.Perspective, ci quic.ConnectionID) *logging.ConnectionTracer {
-			role := "server"
-			if p == logging.PerspectiveClient {
-				role = "client"
-			}
-			filename := fmt.Sprintf("./log_%x_%s.qlog", ci, role)
-			f, err := os.Create(filename)
-			if err != nil {
-				slog.Error("Error creating qlog file", filename, err)
-			}
-			return qlog.NewConnectionTracer(f, p, ci)
-		},
-	})
-	if err != nil {
-		slog.Error("Unable to listen, check tls and quic configurations", err)
-		return nil, err
-	}
-
-	slog.Info("UDP Listener active on:", "", ln.Addr())
-
-	return ln, nil
+func handleHome(w http.ResponseWriter, r *http.Request) {
+	fmt.Fprintln(w, "we is in da home")
+}
+func handleRocket(w http.ResponseWriter, r *http.Request) {
+	fmt.Fprintln(w, "this is where the rockets should be rendered")
 }
