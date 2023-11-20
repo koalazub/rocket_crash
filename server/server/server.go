@@ -40,8 +40,11 @@ func InitServer() {
 	fAddr := addr + ":" + fmt.Sprintf("%d", port)
 	crt := "certfile.crt"
 	key := "keyfile.key"
+
 	slog.Info("Now listening on:", "->", fAddr)
+
 	err := http3.ListenAndServeQUIC(fAddr, crt, key, setupHandler())
+
 	if err != nil {
 		slog.Error("ListenAndServeQuic error: ", "\n", err)
 	}

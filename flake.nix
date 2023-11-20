@@ -62,6 +62,7 @@
               gopls
               capnproto
               capnpc-go
+              hurl
               templ.packages.${system}.templ
             ];
           };
