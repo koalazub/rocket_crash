@@ -32,7 +32,7 @@
             pname = "capnpc-go";
             src = go-capnp;
             sourceRoot = "go-capnp";
-            vendorSha256 = "sha256-DRNbv+jhIHzoBItuiQykrp/pD/46uysFbazLJ59qbqY=";
+            vendorHash = "sha256-DRNbv+jhIHzoBItuiQykrp/pD/46uysFbazLJ59qbqY=";
             buildPhase = ''
               go install ./capnpc-go
             '';

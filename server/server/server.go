@@ -21,7 +21,7 @@ var port int
 func loadEnv() {
 	// Reload env later on via cicd - this looks like shit
 	if err := godotenv.Load("../.env"); err != nil {
-		slog.Error("Couldn't load env variables for server. Are they there? ")
+		slog.Error("Couldn't load env variables for server. Are they there?", "\n", err)
 		return
 	}
 
@@ -32,17 +32,18 @@ func loadEnv() {
 		slog.Error("Couldn't get port:", err)
 		return
 	}
+
 	port = p
 }
 
 func InitServer() {
-	fAddr := addr + ":" + string(port)
-	crt := "certfile.cert"
+	fAddr := addr + ":" + fmt.Sprintf("%d", port)
+	crt := "certfile.crt"
 	key := "keyfile.key"
-	slog.Info("Now listening on:", fAddr)
+	slog.Info("Now listening on:", "->", fAddr)
 	err := http3.ListenAndServeQUIC(fAddr, crt, key, setupHandler())
 	if err != nil {
-		slog.Error("Couldn't create QUIC server. Check that the address, cert, key and handlers are good: ", err)
+		slog.Error("ListenAndServeQuic error: ", "\n", err)
 	}
 
 }
