@@ -43,10 +43,8 @@
             version = builtins.substring 0 8 (self.lastModifiedDate or "19700101");
             srcs = [
               go-capnp
-            ];
-
-            GOMAXPROCS = "1";
-
+            ]; 
+        
             sourceRoot = "rocket_crash-src/";
             shellHook = ''
               echo "Entered devshell"
@@ -63,11 +61,12 @@
               capnproto
               capnpc-go
               hurl
+              curlHTTP3
               templ.packages.${system}.templ
             ];
           };
+          formatter = pkgs.nixpkgs-fmt;
         });
-
       defaultPackage = forAllSystems (system: self.packages.${system}.rocket_crash);
     };
 }
