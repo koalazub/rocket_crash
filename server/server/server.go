@@ -9,6 +9,7 @@ import (
 	"strconv"
 
 	"github.com/joho/godotenv"
+	"github.com/koalazub/rocket-crash/templs"
 	"github.com/quic-go/quic-go"
 	"github.com/quic-go/quic-go/http3"
 	"github.com/quic-go/quic-go/logging"
@@ -46,28 +47,29 @@ func InitServer() {
 	crt := "certfile.crt"
 	key := "keyfile.key"
 
-	slog.Info("Now listening on:", "->", fAddr)
+	slog.Info("message", "Now listening on: ", fAddr)
 
 	err := http3.ListenAndServeQUIC(fAddr, crt, key, setupHandler())
 
 	if err != nil {
-		slog.Error("ListenAndServeQuic error:  ", err.Error())
+		slog.Error("ListenAndServeQuic error:  ", "error", err.Error())
 		return
 	}
 
 }
 
 func initLogger() *quic.Config {
+	slog.Info("logger initialised")
 	return &quic.Config{
 		Tracer: func(ctx context.Context, p logging.Perspective, ci quic.ConnectionID) *logging.ConnectionTracer {
 			role := "server"
 			if p == logging.PerspectiveClient {
 				role = "client"
 			}
-			filename := fmt.Sprintln("./log_%s_%s.qlog", ci, role)
+			filename := fmt.Sprintf("./log_%s_%s.qlog", ci, role)
 			f, err := os.Create(filename)
 			if err != nil {
-				slog.Error("Error during quic log file creation process: ", err.Error())
+				slog.Error("Error during quic log file creation process: ", "error ", err.Error())
 				return nil
 			}
 
@@ -85,8 +87,19 @@ func setupHandler() http.Handler {
 }
 
 func handleHome(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprintln(w, "we is in da home")
+	err := templs.Home("chief").Render(r.Context(), w)
+	if err != nil {
+		slog.Error("message", "Error reading component", err)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	} 
 }
+
+func handleColorchange(w http.ResponseWriter, r *http.Request) {
+	newColor := "blue"
+
+	fmt.Fprintf(w, `<button style="color: %s;" hx-trigger="click">go on</button>`, newColor)
+}
+
 func handleRocket(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprintln(w, "this is where the rockets should be rendered")
+
 }
