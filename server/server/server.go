@@ -80,9 +80,9 @@ func initLogger() *quic.Config {
 
 func setupHandler() http.Handler {
 	mux := http.NewServeMux()
-	mux.HandleFunc("/", h.HandleLanding)
-	mux.HandleFunc("/welcome", h.HandleWelcome)
-	mux.HandleFunc("/rocket", h.HandleRocket)
+	mux.HandleFunc("/", h.Landing)
+	mux.HandleFunc("/welcome", h.Welcome)
+	mux.HandleFunc("/rocket", h.Rocket)
 
 	return mux
 }
