@@ -9,6 +9,7 @@ import (
 	"strconv"
 
 	"github.com/joho/godotenv"
+	h "github.com/koalazub/rocket-crash/handlers"
 	"github.com/quic-go/quic-go"
 	"github.com/quic-go/quic-go/http3"
 	"github.com/quic-go/quic-go/logging"
@@ -79,9 +80,9 @@ func initLogger() *quic.Config {
 
 func setupHandler() http.Handler {
 	mux := http.NewServeMux()
-	mux.HandleFunc("/", handleLanding)
-	mux.HandleFunc("/welcome", handleWelcome)
-	mux.HandleFunc("/rocket", handleRocket)
+	mux.HandleFunc("/", h.HandleLanding)
+	mux.HandleFunc("/welcome", h.HandleWelcome)
+	mux.HandleFunc("/rocket", h.HandleRocket)
 
 	return mux
 }
