@@ -1,6 +1,6 @@
 using Go = import "/go.capnp"; # I think this is the import statement for the go version of capnp
 @0x9c76bc62a71f9389;
-$Go.package("rocket");
+$Go.package("schema");
 $Go.import("schema/rocket.capnp");
 
 struct Rocket {

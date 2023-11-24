@@ -1,7 +1,8 @@
 using Go = import "/go.capnp";
 
-@0x9c76bc62a71f9389;
-$Go.package("user");
+@0xe26cbc744ed2a7c9;
+
+$Go.package("schema");
 $Go.import("schema/user.capnp");
 
 struct User {

@@ -2,7 +2,14 @@ package templs
 
 // note: not sure if I shoudl welcome the user here
 templ Landing() {
-  <div _="fade after 5s then disappear">
-    Welcome!
+<head>
+      <script src="https://unpkg.com/htmx.org@1.9.9"></script>
+      <meta http-equiv="refresh" content="5;" />
+
+</head>
+  <div>
+    <div _="on load wait 5s then then transition opacity to 0 then remove me">
+      Loading...
+    </div>
   </div>
 }
