@@ -9,7 +9,6 @@ import (
 	"strconv"
 
 	"github.com/joho/godotenv"
-	"github.com/koalazub/rocket-crash/templs"
 	"github.com/quic-go/quic-go"
 	"github.com/quic-go/quic-go/http3"
 	"github.com/quic-go/quic-go/logging"
@@ -80,26 +79,9 @@ func initLogger() *quic.Config {
 
 func setupHandler() http.Handler {
 	mux := http.NewServeMux()
-	mux.HandleFunc("/", handleHome)
+	mux.HandleFunc("/", handleLanding)
+	mux.HandleFunc("/welcome", handleWelcome)
 	mux.HandleFunc("/rocket", handleRocket)
 
 	return mux
-}
-
-func handleHome(w http.ResponseWriter, r *http.Request) {
-	err := templs.Home("chief").Render(r.Context(), w)
-	if err != nil {
-		slog.Error("message", "Error reading component", err)
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-	} 
-}
-
-func handleColorchange(w http.ResponseWriter, r *http.Request) {
-	newColor := "blue"
-
-	fmt.Fprintf(w, `<button style="color: %s;" hx-trigger="click">go on</button>`, newColor)
-}
-
-func handleRocket(w http.ResponseWriter, r *http.Request) {
-
 }
