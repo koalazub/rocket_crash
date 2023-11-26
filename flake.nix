@@ -37,8 +37,8 @@
               go install ./capnpc-go
             '';
           };
-          rocket_crash = pkgs.stdenv.mkDerivation {
-            name = "rocket_crash";
+          dev = pkgs.stdenv.mkDerivation {
+            name = "rocket_crash_dev";
             pname = "rocket_crash";
             version = builtins.substring 0 8 (self.lastModifiedDate or "19700101");
             srcs = [
@@ -66,7 +66,7 @@
             ];
           };
           formatter = pkgs.nixpkgs-fmt;
+          default = dev;
         });
-      defaultPackage = forAllSystems (system: self.packages.${system}.rocket_crash);
     };
 }
