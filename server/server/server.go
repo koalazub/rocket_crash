@@ -2,6 +2,7 @@ package server
 
 import (
 	"context"
+	"database/sql"
 	"fmt"
 	"log/slog"
 	"net/http"
@@ -41,7 +42,7 @@ func loadEnv() {
 	port = p
 }
 
-func InitServer() {
+func InitServer(db *sql.DB) {
 	initLogger()
 	fAddr := addr + ":" + fmt.Sprintf("%d", port)
 	crt := "certfile.crt"
@@ -49,7 +50,7 @@ func InitServer() {
 
 	slog.Info("message", "Now listening on: ", fAddr)
 
-	err := http3.ListenAndServeQUIC(fAddr, crt, key, setupHandler())
+	err := http3.ListenAndServeQUIC(fAddr, crt, key, setupHandler(db))
 
 	if err != nil {
 		slog.Error("ListenAndServeQuic error:  ", "error", err.Error())
@@ -78,11 +79,11 @@ func initLogger() *quic.Config {
 	}
 }
 
-func setupHandler() http.Handler {
+func setupHandler(db *sql.DB) http.Handler {
 	mux := http.NewServeMux()
 	mux.HandleFunc("/", h.Landing)
 	mux.HandleFunc("/welcome", h.Welcome)
-	mux.HandleFunc("/rocket", h.Rocket)
+	mux.HandleFunc("/rockets", h.Rockets(db))
 
 	return mux
 }

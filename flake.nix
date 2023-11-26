@@ -60,6 +60,7 @@
               gopls
               capnproto
               capnpc-go
+              sqld
               hurl
               curlHTTP3
               templ.packages.${system}.templ

@@ -1,10 +1,12 @@
 package handlers
 
 import (
+	"database/sql"
 	"fmt"
 	"log/slog"
 	"net/http"
 
+	d "github.com/koalazub/rocket-crash/database"
 	"github.com/koalazub/rocket-crash/templs"
 )
 
@@ -27,12 +29,17 @@ func Landing(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func Colorchange(w http.ResponseWriter, r *http.Request) {
-	newColor := "blue"
+func Rockets(db *sql.DB) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		rockets, err := d.GetRockets(db)
+		if err != nil {
+			slog.Error("Couldn't fetch rockets", err)
+			http.Error(w, "Internal server error", http.StatusInternalServerError)
+			return
+		}
 
-	fmt.Fprintf(w, `<button style="color: %s;" hx-trigger="click">go on</button>`, newColor)
-}
-
-func Rocket(w http.ResponseWriter, r *http.Request) {
-
+		for _, r := range rockets {
+			fmt.Printf("Rockets! %v", r)
+		}
+	}
 }

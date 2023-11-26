@@ -7,7 +7,7 @@ import (
 )
 
 func main() {
-	d.StartDatabase()
-	s.InitServer()
+	db := d.Start()
+	s.InitServer(db)
 
 }

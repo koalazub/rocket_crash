@@ -15,7 +15,18 @@ func init() {
 	loadEnv()
 }
 
-func StartDatabase() *sql.DB {
+// don't json this - using capnp
+type Rocket struct {
+	ID          int64
+	Name        string
+	User        string
+	Crashed     bool
+	RocketType  string
+	deathCoordX float64
+	deathCoordY float64
+}
+
+func Start() *sql.DB {
 	db := initConnection()
 	err := initTable(db)
 	if err != nil {
@@ -27,6 +38,27 @@ func StartDatabase() *sql.DB {
 	return db
 }
 
+func GetRockets(db *sql.DB) ([]Rocket, error) {
+	rows, err := db.Query("select id, name, crashed, death_coord_x, death_coord_y, rocket_type from rockets")
+	if err != nil {
+		slog.Error("couldn't fetch from the database")
+		return nil, err
+	}
+
+	defer rows.Close()
+	var rockets []Rocket
+	for rows.Next() {
+		var r Rocket
+		err := rows.Scan(&r.ID, &r.Name, &r.User, &r.Crashed, &r.RocketType, &r.deathCoordX, &r.deathCoordY)
+		if err != nil {
+			slog.Error("Error scanning rocket rows ", "Err:", err)
+			return nil, err
+		}
+		rockets = append(rockets, r)
+	}
+	return rockets, nil
+
+}
 func initConnection() *sql.DB {
 	databaseUrl := fmt.Sprintf("libsql://%s?authToken=%s", tursoUrl, tursoAuth)
 	db, err := sql.Open("libsql", databaseUrl)
@@ -38,13 +70,56 @@ func initConnection() *sql.DB {
 	return db
 }
 
+var createTableSQL = `
+		CREATE TABLE IF NOT EXISTS rockets (
+		id INT, 
+		name varchar(255)
+		crashed INT,
+		death_coord_x real,
+		death_coord_y real,
+		rocket_type varchar(255) 
+	)
+`
+
 func initTable(db *sql.DB) error {
-	_, err := db.Exec("create table if not exists rockets(id INT, name varchar(255),  crashed int, death_coord_x real, death_coord_y real, rocket_type varchar(255))")
+	requiredCols := map[string]string{
+		"id":            "INT",
+		"name":          "varchar(255)",
+		"crashed":       "INT",
+		"death_coord_x": "real",
+		"death_coord_y": "real",
+		"rocket_type":   "varchar(255)",
+	}
+
+	_, err := db.Exec(createTableSQL)
 	if err != nil {
 		slog.Error("Error creating table. Verify that the query is correct")
 		return err
 	}
 	slog.Info("rocket table initialised")
+
+	for colName, colType := range requiredCols {
+		var cn string
+		err := db.QueryRow(`
+				SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS 
+				WHERE TABLE_NAME = 'rockets' AND COLUMN_NAME = ? 
+			`, cn).Scan(&colName)
+		if err == sql.ErrNoRows {
+			alterSQL := fmt.Sprintf("ALTER TABLE rockets ADD COLUMN %s %s", colName, colType)
+			_, err = db.Exec(alterSQL)
+			if err != nil {
+				slog.Error("Error adding column", "Column: ", err)
+				return err
+			}
+
+			slog.Info("Column added", "column: ", colName)
+		} else if err != nil {
+			slog.Error("Error checking for column", "column: ", err)
+			return err
+		}
+
+	}
+	slog.Info("rocket table's been initialised")
 	return nil
 }
 
