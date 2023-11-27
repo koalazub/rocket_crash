@@ -10,6 +10,7 @@ import (
 )
 
 var tursoAuth, tursoUrl, dbUrl string
+var ToLog *bool
 
 func init() {
 	loadEnv()
@@ -34,7 +35,9 @@ func Start() *sql.DB {
 		return nil
 	}
 
-	slog.Info("Started database", "", db.Stats())
+	if ToLog != nil && *ToLog {
+		slog.Info("Started database", "", db.Stats())
+	}
 	return db
 }
 
@@ -56,6 +59,10 @@ func GetRockets(db *sql.DB) ([]Rocket, error) {
 		}
 		rockets = append(rockets, r)
 	}
+	if ToLog != nil && *ToLog {
+		slog.Info("query", "rows: ", rows)
+		slog.Info("query", "rockets: ", rockets)
+	}
 	return rockets, nil
 
 }
@@ -65,6 +72,11 @@ func initConnection() *sql.DB {
 	if err != nil {
 		slog.Error("database couldn't be opened", "Err:", err)
 		os.Exit(1)
+	}
+
+	if ToLog != nil && *ToLog {
+		slog.Info("database", "url", databaseUrl)
+		slog.Info("database init connection", "db", db)
 	}
 
 	return db

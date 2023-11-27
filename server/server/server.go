@@ -17,6 +17,8 @@ import (
 	"github.com/quic-go/quic-go/qlog"
 )
 
+var ToLog *bool
+
 func init() {
 	loadEnv()
 }
@@ -40,10 +42,14 @@ func loadEnv() {
 	}
 
 	port = p
+	if ToLog != nil && *ToLog {
+		slog.Info("port information:", "data:", port)
+	}
 }
 
-func InitServer(db *sql.DB) {
-	initLogger()
+func InitServer(toLog *bool, db *sql.DB) {
+	defer initLogger()
+	// initLogger()
 	fAddr := addr + ":" + fmt.Sprintf("%d", port)
 	crt := "certfile.crt"
 	key := "keyfile.key"
@@ -55,6 +61,10 @@ func InitServer(db *sql.DB) {
 	if err != nil {
 		slog.Error("ListenAndServeQuic error:  ", "error", err.Error())
 		return
+	}
+
+	if ToLog != nil && *ToLog {
+		slog.Info("address info:", "faddr is: ", fAddr)
 	}
 
 }
@@ -74,6 +84,11 @@ func initLogger() *quic.Config {
 				return nil
 			}
 
+			if ToLog != nil && *ToLog {
+				qlog.NewConnectionTracer(f, p, ci)
+				slog.Info("filename saved is", "file:", filename)
+			}
+
 			return qlog.NewConnectionTracer(f, p, ci)
 		},
 	}
@@ -84,6 +99,9 @@ func setupHandler(db *sql.DB) http.Handler {
 	mux.HandleFunc("/", h.Landing)
 	mux.HandleFunc("/welcome", h.Welcome)
 	mux.HandleFunc("/rockets", h.Rockets(db))
+	if ToLog != nil && *ToLog {
+		fmt.Printf("mux: %v\n", mux)
+	}
 
 	return mux
 }
