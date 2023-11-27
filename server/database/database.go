@@ -83,24 +83,24 @@ func initConnection() *sql.DB {
 }
 
 var createTableSQL = `
-		CREATE TABLE IF NOT EXISTS rockets (
-		id INT, 
-		name varchar(255)
-		crashed INT,
+		create table if not exists rockets (
+		id int, 
+		name text,
+		crashed int,
 		death_coord_x real,
 		death_coord_y real,
-		rocket_type varchar(255) 
+		rocket_type text 
 	)
 `
 
 func initTable(db *sql.DB) error {
 	requiredCols := map[string]string{
 		"id":            "INT",
-		"name":          "varchar(255)",
+		"name":          "text",
 		"crashed":       "INT",
 		"death_coord_x": "real",
 		"death_coord_y": "real",
-		"rocket_type":   "varchar(255)",
+		"rocket_type":   "text",
 	}
 
 	_, err := db.Exec(createTableSQL)
@@ -110,28 +110,49 @@ func initTable(db *sql.DB) error {
 	}
 	slog.Info("rocket table initialised")
 
+	rows, err := db.Query("PRAGMA table_info(rockets);")
+	if err != nil {
+		slog.Error("couldn't query rockets", err)
+		return err
+	}
+
+	defer rows.Close()
+
+	existingCols := make(map[string]bool)
+	for rows.Next() {
+		var (
+			cid      string
+			name     string
+			colType  string
+			notnull  int
+			dflt_val *string
+			pk       int
+		)
+		if err := rows.Scan(&cid, &name, &colType, &notnull, &dflt_val, &pk); err != nil {
+			slog.Error("Error scanning table: ", err)
+			return err
+		}
+		existingCols[name] = true
+	}
 	for colName, colType := range requiredCols {
-		var cn string
-		err := db.QueryRow(`
-				SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS 
-				WHERE TABLE_NAME = 'rockets' AND COLUMN_NAME = ? 
-			`, cn).Scan(&colName)
-		if err == sql.ErrNoRows {
+		if !existingCols[colName] {
 			alterSQL := fmt.Sprintf("ALTER TABLE rockets ADD COLUMN %s %s", colName, colType)
-			_, err = db.Exec(alterSQL)
-			if err != nil {
-				slog.Error("Error adding column", "Column: ", err)
+			if _, err = db.Exec(alterSQL); err != nil {
+				slog.Error("Couldn't alter table", err)
 				return err
 			}
 
-			slog.Info("Column added", "column: ", colName)
-		} else if err != nil {
-			slog.Error("Error checking for column", "column: ", err)
-			return err
+			if ToLog != nil && *ToLog {
+				slog.Info("Column added", "col:", colName)
+			}
 		}
-
 	}
-	slog.Info("rocket table's been initialised")
+
+	if ToLog != nil && *ToLog {
+		slog.Info("query", "after:", err)
+		slog.Info("rocket table's been initialised")
+	}
+
 	return nil
 }
 
