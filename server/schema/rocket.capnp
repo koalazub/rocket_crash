@@ -8,4 +8,6 @@ struct Rocket {
   user @1 :Text;  
   deathCoordY @2 :Float64;
   deathCoordX @3 :Float64;
+  rocketType @4 :Text;
+  crashed @5 :Bool;
 }  

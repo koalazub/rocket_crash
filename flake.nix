@@ -64,6 +64,7 @@
               hurl
               curlHTTP3
               templ.packages.${system}.templ
+              nodePackages.vscode-langservers-extracted
             ];
           };
           formatter = pkgs.nixpkgs-fmt;
