@@ -134,6 +134,7 @@ func initTable(db *sql.DB) error {
 		}
 		existingCols[name] = true
 	}
+
 	for colName, colType := range requiredCols {
 		if !existingCols[colName] {
 			alterSQL := fmt.Sprintf("ALTER TABLE rockets ADD COLUMN %s %s", colName, colType)
