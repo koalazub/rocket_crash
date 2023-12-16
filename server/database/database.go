@@ -19,7 +19,6 @@ func init() {
 // don't json this - using capnp
 type Rocket struct {
 	ID          int64
-	Name        string
 	User        string
 	Crashed     bool
 	RocketType  string
@@ -42,7 +41,7 @@ func Start() *sql.DB {
 }
 
 func GetRockets(db *sql.DB) ([]Rocket, error) {
-	rows, err := db.Query("select id, name, crashed, death_coord_x, death_coord_y, rocket_type from rockets")
+	rows, err := db.Query("select id, user, crashed, death_coord_x, death_coord_y, rocket_type from rockets")
 	if err != nil {
 		slog.Error("couldn't fetch from the database")
 		return nil, err
@@ -52,7 +51,7 @@ func GetRockets(db *sql.DB) ([]Rocket, error) {
 	var rockets []Rocket
 	for rows.Next() {
 		var r Rocket
-		err := rows.Scan(&r.ID, &r.Name, &r.User, &r.Crashed, &r.RocketType, &r.deathCoordX, &r.deathCoordY)
+		err := rows.Scan(&r.ID, r.User, &r.Crashed, &r.RocketType, &r.deathCoordX, &r.deathCoordY)
 		if err != nil {
 			slog.Error("Error scanning rocket rows ", "Err:", err)
 			return nil, err
@@ -85,7 +84,7 @@ func initConnection() *sql.DB {
 var createTableSQL = `
 		create table if not exists rockets (
 		id int, 
-		name text,
+		user text,
 		crashed int,
 		death_coord_x real,
 		death_coord_y real,
@@ -96,7 +95,7 @@ var createTableSQL = `
 func initTable(db *sql.DB) error {
 	requiredCols := map[string]string{
 		"id":            "INT",
-		"name":          "text",
+		"user":          "text",
 		"crashed":       "INT",
 		"death_coord_x": "real",
 		"death_coord_y": "real",
@@ -122,17 +121,17 @@ func initTable(db *sql.DB) error {
 	for rows.Next() {
 		var (
 			cid      string
-			name     string
+			user     string
 			colType  string
 			notnull  int
 			dflt_val *string
 			pk       int
 		)
-		if err := rows.Scan(&cid, &name, &colType, &notnull, &dflt_val, &pk); err != nil {
+		if err := rows.Scan(&cid, &user, &colType, &notnull, &dflt_val, &pk); err != nil {
 			slog.Error("Error scanning table: ", err)
 			return err
 		}
-		existingCols[name] = true
+		existingCols[user] = true
 	}
 
 	for colName, colType := range requiredCols {
