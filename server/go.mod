@@ -8,7 +8,7 @@ require (
 	capnproto.org/go/capnp/v3 v3.0.0-alpha-29
 	github.com/a-h/templ v0.2.476
 	github.com/joho/godotenv v1.5.1
-	github.com/quic-go/quic-go v0.40.0
+	github.com/quic-go/quic-go v0.40.1
 )
 
 require (
